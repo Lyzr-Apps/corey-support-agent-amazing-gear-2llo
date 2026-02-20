@@ -1,0 +1,10 @@
+{
+  "agent_ids": {
+    "customer_support_agent": "69988c23bf6ce2c35b435ab9",
+    "approval_handler_agent": "69988c245d2326ad4d26cbc6"
+  },
+  "rag_ids": {
+    "corey_support_kb": "69988bfb3dc9e9e52825cb31"
+  },
+  "created_at": "2026-02-20T00:00:00Z"
+}

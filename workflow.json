@@ -1,0 +1,28 @@
+{
+  "nodes": [
+    {"id": "input_node", "type": "Input", "label": "User Query", "nodeCategory": "input"},
+    {"id": "customer_support_agent", "type": "Agent", "label": "Customer Support Agent", "nodeCategory": "agent"},
+    {"id": "approval_handler_agent", "type": "Agent", "label": "Approval Handler Agent", "nodeCategory": "agent"},
+    {"id": "output_node", "type": "Output", "label": "Response Output", "nodeCategory": "end"}
+  ],
+  "edges": [
+    {"source": "input_node", "target": "customer_support_agent"},
+    {"source": "customer_support_agent", "target": "approval_handler_agent"},
+    {"source": "approval_handler_agent", "target": "output_node"}
+  ],
+  "agents": {
+    "customer_support_agent": {
+      "id": "69988c23bf6ce2c35b435ab9",
+      "name": "Customer Support Agent",
+      "type": "independent",
+      "has_kb": true,
+      "rag_id": "69988bfb3dc9e9e52825cb31"
+    },
+    "approval_handler_agent": {
+      "id": "69988c245d2326ad4d26cbc6",
+      "name": "Approval Handler Agent",
+      "type": "independent",
+      "has_kb": false
+    }
+  }
+}

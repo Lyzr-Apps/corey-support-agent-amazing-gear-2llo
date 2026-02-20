@@ -1,0 +1,44 @@
+{
+  "agent_name": "Customer Support Agent",
+  "agent_id": "69988c23bf6ce2c35b435ab9",
+  "description": "Handles all customer-facing chat: answers questions from KB with citations, captures leads, creates/routes tickets, presents Stripe upsell links, logs revenue to Google Sheets, calculates 20% Pro Fund allocation, and collects details for approval-gated requests before routing to operator",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "response_text": "string",
+    "citations": [
+      {
+        "source": "string",
+        "excerpt": "string"
+      }
+    ],
+    "ticket": "string",
+    "lead_info": "string",
+    "upsell_offer": "string",
+    "approval_request": "string",
+    "revenue_entry": "string"
+  },
+  "example_response": {
+    "response_text": "The main response message to the customer",
+    "citations": [
+      {
+        "source": "Source document name",
+        "excerpt": "Relevant excerpt from the source"
+      }
+    ],
+    "ticket": "sample",
+    "lead_info": "sample",
+    "upsell_offer": "sample",
+    "approval_request": "sample",
+    "revenue_entry": "sample"
+  },
+  "has_module_outputs": true,
+  "module_outputs_example": {
+    "artifact_files": [
+      {
+        "file_url": "https://example.com/file.pdf"
+      }
+    ]
+  }
+}

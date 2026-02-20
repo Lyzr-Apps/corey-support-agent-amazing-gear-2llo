@@ -1,0 +1,38 @@
+{
+  "agent_name": "Approval Handler Agent",
+  "agent_id": "69988c245d2326ad4d26cbc6",
+  "description": "Processes operator decisions on pending refund/account change requests. Takes approve/deny decision with notes, composes customer response, updates ticket status, and logs outcome.",
+  "agent_type": "json",
+  "accessor": "result",
+  "auto_generated": true,
+  "response_schema": {
+    "decision": "string",
+    "customer_response": "string",
+    "ticket_update": {
+      "ticket_id": "string",
+      "new_status": "string",
+      "resolution_notes": "string"
+    },
+    "outcome_log": {
+      "request_type": "string",
+      "operator_notes": "string",
+      "action_taken": "string",
+      "timestamp": "string"
+    }
+  },
+  "example_response": {
+    "decision": "The operator decision",
+    "customer_response": "Professional message to send to the customer",
+    "ticket_update": {
+      "ticket_id": "The ticket ID",
+      "new_status": "Updated ticket status",
+      "resolution_notes": "Notes about the resolution"
+    },
+    "outcome_log": {
+      "request_type": "Type of request processed",
+      "operator_notes": "Notes from the operator",
+      "action_taken": "Summary of action taken",
+      "timestamp": "Processing timestamp"
+    }
+  }
+}

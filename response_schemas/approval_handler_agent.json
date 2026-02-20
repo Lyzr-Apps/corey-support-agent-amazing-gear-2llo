@@ -1,0 +1,14 @@
+{
+  "agent_name": "Approval Handler Agent",
+  "agent_id": "69988c245d2326ad4d26cbc6",
+  "agent_type": "json",
+  "accessor": "json",
+  "has_module_outputs": false,
+  "has_knowledge_base": false,
+  "schema": {
+    "decision": "string",
+    "customer_response": "string",
+    "ticket_update": {"ticket_id": "string", "new_status": "string", "resolution_notes": "string"},
+    "outcome_log": {"request_type": "string", "operator_notes": "string", "action_taken": "string", "timestamp": "string"}
+  }
+}
