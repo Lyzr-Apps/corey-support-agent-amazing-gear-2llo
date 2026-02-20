@@ -48,3 +48,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Prevent the Built with Architect badge from blocking clicks on app UI */
+#architect-badge-trigger,
+#architect-badge-card,
+.built-with-architect,
+a[aria-label*="Built with"],
+a[href*="architect"],
+a[href*="lyzr"],
+[class*="built-with"],
+[id*="built-with"] {
+  pointer-events: none !important;
+}
