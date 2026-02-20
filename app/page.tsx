@@ -770,7 +770,7 @@ export default function Page() {
           <main className="flex-1 overflow-y-auto">
             {/* ========== DASHBOARD ========== */}
             {activeSection === 'dashboard' && (
-              <div className="p-6 space-y-6 max-w-7xl mx-auto">
+              <div className="p-6 pb-20 space-y-6 max-w-7xl mx-auto">
                 {/* Pro Fund Notification Banner */}
                 {proFundReady && (
                   <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-4 flex items-center gap-3">
@@ -977,14 +977,14 @@ export default function Page() {
 
                 {/* Operator Take Over FAB */}
                 {!isOperatorMode && chatMessages.length > 0 && (
-                  <button onClick={() => setIsOperatorMode(true)} className="absolute bottom-20 right-6 bg-card border border-border/40 shadow-lg rounded-full px-3 py-2 flex items-center gap-2 text-xs font-medium hover:bg-secondary transition-colors z-10">
+                  <button onClick={() => setIsOperatorMode(true)} className="absolute bottom-[120px] right-6 bg-card border border-border/40 shadow-lg rounded-full px-3 py-2 flex items-center gap-2 text-xs font-medium hover:bg-secondary transition-colors z-10">
                     <FiUser className="w-3.5 h-3.5" />
                     Take Over
                   </button>
                 )}
 
                 {/* Chat Input */}
-                <div className="border-t border-border/30 bg-card px-6 py-3 flex-shrink-0">
+                <div className="border-t border-border/30 bg-card px-6 py-3 pb-[72px] flex-shrink-0">
                   <div className="flex items-end gap-3 max-w-4xl mx-auto">
                     <div className="flex-1">
                       <textarea
@@ -1006,7 +1006,7 @@ export default function Page() {
 
             {/* ========== APPROVALS ========== */}
             {activeSection === 'approvals' && (
-              <div className="p-6 max-w-4xl mx-auto space-y-6">
+              <div className="p-6 pb-20 max-w-4xl mx-auto space-y-6">
                 {/* Tabs */}
                 <div className="flex gap-1 bg-secondary/50 p-1 rounded-lg w-fit">
                   <button onClick={() => setApprovalTab('pending')} className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${approvalTab === 'pending' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
@@ -1162,7 +1162,7 @@ export default function Page() {
 
             {/* ========== SETTINGS ========== */}
             {activeSection === 'settings' && (
-              <div className="p-6 max-w-3xl mx-auto space-y-6">
+              <div className="p-6 pb-20 max-w-3xl mx-auto space-y-6">
                 {/* Settings Tabs */}
                 <div className="flex gap-1 bg-secondary/50 p-1 rounded-lg w-fit flex-wrap">
                   {(['general', 'products', 'revenue', 'notifications'] as const).map(tab => (
