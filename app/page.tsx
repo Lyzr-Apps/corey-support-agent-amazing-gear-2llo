@@ -91,6 +91,7 @@ interface AppSettings {
   pro_fund_threshold: number
   conversion_count_threshold: number
   time_window_days: number
+  credit_warning_threshold: number
 }
 
 type NavSection = 'dashboard' | 'chat' | 'approvals' | 'settings'
@@ -138,6 +139,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   pro_fund_threshold: 120,
   conversion_count_threshold: 3,
   time_window_days: 14,
+  credit_warning_threshold: 5,
 }
 
 // ===================== SAMPLE DATA =====================
@@ -405,6 +407,13 @@ export default function Page() {
   // Inline status messages
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null)
 
+  // Low-Cost Mode & Credits
+  const [lowCostMode, setLowCostMode] = useState(false)
+  const [platformCredits, setPlatformCredits] = useState(4.95)
+
+  // Credit warning check
+  const creditWarning = useMemo(() => platformCredits <= settings.credit_warning_threshold, [platformCredits, settings.credit_warning_threshold])
+
   // Load settings from localStorage
   useEffect(() => {
     try {
@@ -413,12 +422,26 @@ export default function Page() {
         const parsed = JSON.parse(saved)
         setSettings(prev => ({ ...prev, ...parsed }))
       }
+      const savedLcm = localStorage.getItem('corey_low_cost_mode')
+      if (savedLcm === 'true') setLowCostMode(true)
+      const savedCredits = localStorage.getItem('corey_platform_credits')
+      if (savedCredits) setPlatformCredits(parseFloat(savedCredits) || 4.95)
     } catch {
       // ignore parse errors
     }
     const timer = setTimeout(() => setDashboardLoading(false), 800)
     return () => clearTimeout(timer)
   }, [])
+
+  // Persist low-cost mode
+  useEffect(() => {
+    localStorage.setItem('corey_low_cost_mode', String(lowCostMode))
+  }, [lowCostMode])
+
+  // Persist credits
+  useEffect(() => {
+    localStorage.setItem('corey_platform_credits', String(platformCredits))
+  }, [platformCredits])
 
   // Sample data toggle
   useEffect(() => {
@@ -484,8 +507,15 @@ export default function Page() {
     setChatLoading(true)
     setActiveAgentId(CUSTOMER_SUPPORT_AGENT_ID)
 
+    // Prepend LOW-COST MODE prefix when enabled
+    const agentMessage = lowCostMode ? `[LOW-COST MODE] ${trimmed}` : trimmed
+
     try {
-      const result: AIAgentResponse = await callAIAgent(trimmed, CUSTOMER_SUPPORT_AGENT_ID, { session_id: sessionId })
+      const result: AIAgentResponse = await callAIAgent(agentMessage, CUSTOMER_SUPPORT_AGENT_ID, { session_id: sessionId })
+
+      // Simulate credit deduction per call
+      const costPerCall = lowCostMode ? 0.02 : 0.05
+      setPlatformCredits(prev => Math.max(0, parseFloat((prev - costPerCall).toFixed(2))))
 
       if (result.success) {
         let parsed = result?.response?.result
@@ -577,7 +607,7 @@ export default function Page() {
       setChatLoading(false)
       setActiveAgentId(null)
     }
-  }, [chatInput, chatLoading, sessionId, settings.pro_fund_percentage])
+  }, [chatInput, chatLoading, sessionId, settings.pro_fund_percentage, lowCostMode])
 
   // Process approval
   const processApproval = useCallback(async (request: ApprovalRequest, decision: 'approved' | 'denied') => {
@@ -734,6 +764,24 @@ export default function Page() {
               )}
             </div>
             <div className="flex items-center gap-3">
+              {/* Credits Display */}
+              <div className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full ${creditWarning ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-secondary text-secondary-foreground'}`}>
+                <FiDollarSign className="w-3 h-3" />
+                <span className="font-mono font-medium">${platformCredits.toFixed(2)}</span>
+              </div>
+              {/* Low-Cost Mode Toggle */}
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <span className={`text-xs font-medium ${lowCostMode ? 'text-amber-700' : 'text-muted-foreground'}`}>Low-Cost</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={lowCostMode}
+                  onClick={() => setLowCostMode(!lowCostMode)}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${lowCostMode ? 'bg-amber-500' : 'bg-muted'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${lowCostMode ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
+                </button>
+              </label>
               {/* Sample Data Toggle */}
               <label className="flex items-center gap-2 cursor-pointer select-none">
                 <span className="text-xs text-muted-foreground">Sample Data</span>
@@ -756,6 +804,33 @@ export default function Page() {
               </button>
             </div>
           </header>
+
+          {/* Credit Warning Banner */}
+          {creditWarning && (
+            <div className="bg-red-50 border-b border-red-200 px-6 py-2.5 flex items-center gap-3 flex-shrink-0">
+              <FiAlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+              <div className="flex-1">
+                <span className="text-sm font-medium text-red-800">Low credits: ${platformCredits.toFixed(2)} remaining</span>
+                <span className="text-xs text-red-600 ml-2">
+                  {lowCostMode ? 'Low-Cost Mode is active -- responses are minimized to conserve credits.' : 'Enable Low-Cost Mode to reduce credit usage per interaction.'}
+                </span>
+              </div>
+              {!lowCostMode && (
+                <button onClick={() => setLowCostMode(true)} className="px-3 py-1 bg-amber-500 text-white text-xs font-medium rounded-md hover:bg-amber-600 transition-colors flex-shrink-0">
+                  Enable Low-Cost
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Low-Cost Mode Active Indicator */}
+          {lowCostMode && !creditWarning && (
+            <div className="bg-amber-50 border-b border-amber-200 px-6 py-1.5 flex items-center gap-2 flex-shrink-0">
+              <FiShield className="w-3.5 h-3.5 text-amber-600" />
+              <span className="text-xs text-amber-700 font-medium">Low-Cost Mode active -- shorter replies, minimal tool calls, canned macros preferred</span>
+              <button onClick={() => setLowCostMode(false)} className="ml-auto text-xs text-amber-600 hover:text-amber-800 underline">Disable</button>
+            </div>
+          )}
 
           {/* Status Message Bar */}
           {statusMessage && (
@@ -1262,38 +1337,106 @@ export default function Page() {
 
                 {/* Notifications Settings */}
                 {settingsTab === 'notifications' && (
-                  <div className="bg-card rounded-lg shadow-sm border border-border/30 p-5">
-                    <h3 className="font-serif font-semibold text-base tracking-wide mb-4">Notification Rules</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block font-medium">Pro Fund Threshold Amount ($)</label>
-                        <input
-                          type="number"
-                          min={0}
-                          value={settings.pro_fund_threshold}
-                          onChange={(e) => setSettings(prev => ({ ...prev, pro_fund_threshold: Number(e.target.value) || 0 }))}
-                          className="w-32 bg-background border border-input rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
-                        />
+                  <div className="space-y-6">
+                    {/* Credit & Cost Management */}
+                    <div className="bg-card rounded-lg shadow-sm border border-border/30 p-5">
+                      <h3 className="font-serif font-semibold text-base tracking-wide mb-4">Credit & Cost Management</h3>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between p-3 bg-background rounded-lg border border-border/20">
+                          <div>
+                            <p className="text-sm font-medium">Platform Credits</p>
+                            <p className="text-xs text-muted-foreground">Current balance for agent API calls</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min={0}
+                              step={0.01}
+                              value={platformCredits}
+                              onChange={(e) => setPlatformCredits(parseFloat(e.target.value) || 0)}
+                              className="w-24 bg-background border border-input rounded-lg px-3 py-2 text-sm text-right font-mono focus:outline-none focus:ring-2 focus:ring-ring/30"
+                            />
+                            <span className="text-xs text-muted-foreground">USD</span>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block font-medium">Credit Warning Threshold ($)</label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="number"
+                              min={0}
+                              step={0.5}
+                              value={settings.credit_warning_threshold}
+                              onChange={(e) => setSettings(prev => ({ ...prev, credit_warning_threshold: Number(e.target.value) || 0 }))}
+                              className="w-24 bg-background border border-input rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+                            />
+                            <span className="text-sm text-muted-foreground">Show warning when credits fall below this amount</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between p-3 bg-background rounded-lg border border-border/20">
+                          <div>
+                            <p className="text-sm font-medium">Low-Cost Mode</p>
+                            <p className="text-xs text-muted-foreground">Ultra-minimal replies, canned macros, no retries</p>
+                          </div>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={lowCostMode}
+                            onClick={() => setLowCostMode(!lowCostMode)}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${lowCostMode ? 'bg-amber-500' : 'bg-muted'}`}
+                          >
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${lowCostMode ? 'translate-x-[18px]' : 'translate-x-[2px]'}`} />
+                          </button>
+                        </div>
+                        {lowCostMode && (
+                          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 space-y-1">
+                            <p className="font-medium">Low-Cost Mode active. Agent behavior changes:</p>
+                            <ul className="list-disc ml-4 space-y-0.5">
+                              <li>Max 2-3 sentences per reply</li>
+                              <li>Canned macro responses preferred</li>
+                              <li>No retries or rephrasing</li>
+                              <li>No follow-up questions unless required</li>
+                              <li>Optional JSON fields default to null</li>
+                            </ul>
+                          </div>
+                        )}
                       </div>
-                      <div>
-                        <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block font-medium">Minimum Conversions for Payout</label>
-                        <input
-                          type="number"
-                          min={0}
-                          value={settings.conversion_count_threshold}
-                          onChange={(e) => setSettings(prev => ({ ...prev, conversion_count_threshold: Number(e.target.value) || 0 }))}
-                          className="w-32 bg-background border border-input rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block font-medium">Time Window (Days)</label>
-                        <input
-                          type="number"
-                          min={1}
-                          value={settings.time_window_days}
-                          onChange={(e) => setSettings(prev => ({ ...prev, time_window_days: Number(e.target.value) || 1 }))}
-                          className="w-32 bg-background border border-input rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
-                        />
+                    </div>
+
+                    {/* Notification Rules */}
+                    <div className="bg-card rounded-lg shadow-sm border border-border/30 p-5">
+                      <h3 className="font-serif font-semibold text-base tracking-wide mb-4">Pro Fund Notification Rules</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block font-medium">Pro Fund Threshold Amount ($)</label>
+                          <input
+                            type="number"
+                            min={0}
+                            value={settings.pro_fund_threshold}
+                            onChange={(e) => setSettings(prev => ({ ...prev, pro_fund_threshold: Number(e.target.value) || 0 }))}
+                            className="w-32 bg-background border border-input rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block font-medium">Minimum Conversions for Payout</label>
+                          <input
+                            type="number"
+                            min={0}
+                            value={settings.conversion_count_threshold}
+                            onChange={(e) => setSettings(prev => ({ ...prev, conversion_count_threshold: Number(e.target.value) || 0 }))}
+                            className="w-32 bg-background border border-input rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block font-medium">Time Window (Days)</label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={settings.time_window_days}
+                            onChange={(e) => setSettings(prev => ({ ...prev, time_window_days: Number(e.target.value) || 1 }))}
+                            className="w-32 bg-background border border-input rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
